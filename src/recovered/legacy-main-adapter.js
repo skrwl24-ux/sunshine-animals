@@ -2,6 +2,7 @@ function slug(value) {
   return String(value || '').toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
 }
 
+const ASSET_BASE = 'https://cute-animal-gacha.skrwl24.chatgpt.site';
 const NAME_ALIASES = Object.freeze({
   '아기 코끼리':'코끼리','수리부엉이':'올빼미','흰점박이복어':'복어','세발가락나무늘보':'나무늘보','카피바라':'카피바라','금조':'금조','넓적부리황새':'넓적부리황새','유리개구리':'유리개구리','액솔로틀':'아홀로틀'
 });
@@ -14,13 +15,23 @@ function fallbackRarity(index) {
   return '일반';
 }
 
+function externalizeAsset(path) {
+  if (!path) return '';
+  if (/^https?:\/\//i.test(path)) return path;
+  return `${ASSET_BASE}${path.startsWith('/') ? '' : '/'}${path}`;
+}
+
 export function enrichRecoveredAnimals(existingAnimals = []) {
   const source = globalThis.GAME_DATA?.animals || [];
   const byKo = new Map(source.map((row,index)=>[row[0],{row,index}]));
   return existingAnimals.map((animal)=>{
     const match = byKo.get(animal.name) || byKo.get(NAME_ALIASES[animal.name]);
-    if (!match) return animal;
-    return { ...animal, nameEn: animal.nameEn || match.row[1], mainIndex: match.index };
+    return {
+      ...animal,
+      image: externalizeAsset(animal.image),
+      nameEn: animal.nameEn || match?.row?.[1] || '',
+      mainIndex: match?.index,
+    };
   });
 }
 
