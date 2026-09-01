@@ -1,6 +1,6 @@
-import { loadSave, migrateSave, saveProgress } from '../core/storage.js';
+import { loadSave, saveLanguage, saveProgress } from '../core/storage.js';
 
-let state = migrateSave(loadSave());
+let state = loadSave();
 const listeners = new Set();
 
 export function getState() {
@@ -12,13 +12,30 @@ export function subscribe(listener) {
   return () => listeners.delete(listener);
 }
 
-export function setState(patch) {
-  state = { ...state, ...patch };
-  saveProgress(state);
+function notify() {
   listeners.forEach((listener) => listener(state));
 }
 
-export function updateState(updater) {
-  const next = updater(state);
-  setState(next);
+export function setProgress(patch) {
+  const nextProgress = {
+    ...state.progress,
+    ...patch,
+  };
+  state = {
+    ...state,
+    progress: saveProgress(nextProgress),
+  };
+  notify();
+}
+
+export function setLanguageState(language) {
+  const normalized = saveLanguage(language);
+  state = { ...state, language: normalized };
+  notify();
+  return normalized;
+}
+
+export function replaceState(nextState) {
+  state = nextState;
+  notify();
 }
