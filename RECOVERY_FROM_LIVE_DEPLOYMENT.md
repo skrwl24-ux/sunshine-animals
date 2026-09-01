@@ -43,6 +43,22 @@ Recovered defaults include Light of Nature `5`, owned `{ capybara: 1 }`, and beh
 - Rescue timer: 30 seconds.
 - Quiz correct answers add Light of Nature and quiz-win progress.
 
+## Recovered hatching contract
+
+- Forest Egg: 5 Light of Nature, one hatch.
+- Radiant Egg: 10 Light of Nature, one hatch.
+- 5 Forest Eggs: 25 Light of Nature.
+- 5 Radiant Eggs: 50 Light of Nature.
+- Forest single thresholds: `[45, 75, 93]` for Rare / Epic / Legendary.
+- Radiant single thresholds: `[25, 55, 83]` for Rare / Epic / Legendary.
+- Five-hatch thresholds: `[35, 65, 88]` for Rare / Epic / Legendary.
+- Rolls below the first threshold are Common.
+- Mythic animals are not directly selected by the recovered egg roll.
+- `puffer` is excluded from normal egg rarity pools.
+- Each hatch increments `explorations` and `owned[animalId]`, preserving duplicates.
+- When Light of Nature is insufficient, the game offers Animal Quiz, Animal Party, and Animal Rescue.
+- The deployed bundle applies a temporary quiz-related `+5` roll boost per boost unit. It is not persisted, so the readable engine keeps it as an optional runtime parameter only.
+
 ## Safety rule for reconstruction
 
 1. Keep the original compiled deployment backup unchanged.
