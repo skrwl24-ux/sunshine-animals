@@ -1,4 +1,4 @@
-import { setState, getState } from './state.js';
+import { getState, setLanguageState } from './state.js';
 
 export function resolveLanguage() {
   const requested = new URLSearchParams(location.search).get('lang');
@@ -7,8 +7,11 @@ export function resolveLanguage() {
 }
 
 export function setLanguage(language) {
-  const next = language === 'en' ? 'en' : 'ko';
-  setState({ language: next });
+  const next = setLanguageState(language);
   document.documentElement.lang = next;
   return next;
+}
+
+export function toggleLanguage() {
+  return setLanguage(getState().language === 'en' ? 'ko' : 'en');
 }
