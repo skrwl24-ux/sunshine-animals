@@ -1,41 +1,86 @@
-import { DEFAULTS, STORAGE_KEYS } from './config.js';
+import { DEFAULT_PROGRESS, STORAGE_KEYS } from './config.js';
 
-function readJson(key, fallback) {
+function cloneDefaultProgress() {
+  return {
+    light: DEFAULT_PROGRESS.light,
+    owned: { ...DEFAULT_PROGRESS.owned },
+    behaviors: { ...DEFAULT_PROGRESS.behaviors },
+    traces: { ...DEFAULT_PROGRESS.traces },
+    quizWins: DEFAULT_PROGRESS.quizWins,
+    explorations: DEFAULT_PROGRESS.explorations,
+    partyGames: DEFAULT_PROGRESS.partyGames,
+    partyBest: DEFAULT_PROGRESS.partyBest,
+    claimed: { ...DEFAULT_PROGRESS.claimed },
+  };
+}
+
+function safeObject(value, fallback = {}) {
+  return value && typeof value === 'object' && !Array.isArray(value) ? value : fallback;
+}
+
+export function migrateProgress(rawProgress) {
+  const base = cloneDefaultProgress();
+  const source = safeObject(rawProgress, {});
+
+  return {
+    light: Number.isFinite(Number(source.light)) ? Number(source.light) : base.light,
+    owned: { ...base.owned, ...safeObject(source.owned) },
+    behaviors: { ...base.behaviors, ...safeObject(source.behaviors) },
+    traces: { ...base.traces, ...safeObject(source.traces) },
+    quizWins: Number.isFinite(Number(source.quizWins)) ? Number(source.quizWins) : base.quizWins,
+    explorations: Number.isFinite(Number(source.explorations)) ? Number(source.explorations) : base.explorations,
+    partyGames: Number.isFinite(Number(source.partyGames)) ? Number(source.partyGames) : base.partyGames,
+    partyBest: Number.isFinite(Number(source.partyBest)) ? Number(source.partyBest) : base.partyBest,
+    claimed: { ...base.claimed, ...safeObject(source.claimed) },
+  };
+}
+
+export function resolveLanguage(search = window.location.search, storage = localStorage) {
+  const params = new URLSearchParams(search);
+  if (params.get('lang') === 'en') return 'en';
+  if (params.get('lang') === 'ko') return 'ko';
+  return storage.getItem(STORAGE_KEYS.language) === 'en' ? 'en' : 'ko';
+}
+
+export function loadSave(storage = localStorage) {
+  let progress = cloneDefaultProgress();
+
   try {
-    const raw = localStorage.getItem(key);
-    return raw == null ? fallback : JSON.parse(raw);
+    const raw = storage.getItem(STORAGE_KEYS.progress);
+    if (raw) progress = migrateProgress(JSON.parse(raw));
   } catch {
-    return fallback;
+    progress = cloneDefaultProgress();
   }
-}
 
-export function loadSave() {
   return {
-    light: Number(localStorage.getItem(STORAGE_KEYS.light) ?? DEFAULTS.light),
-    dust: Number(localStorage.getItem(STORAGE_KEYS.dust) ?? DEFAULTS.dust),
-    owned: readJson(STORAGE_KEYS.owned, {}),
-    language: localStorage.getItem(STORAGE_KEYS.language) || DEFAULTS.language,
-    imageCache: readJson(STORAGE_KEYS.imageCache, {}),
+    language: storage.getItem(STORAGE_KEYS.language) === 'en' ? 'en' : 'ko',
+    partyNickname: storage.getItem(STORAGE_KEYS.partyNickname) || '',
+    partyPlayer: storage.getItem(STORAGE_KEYS.partyPlayer) || '',
+    progress,
   };
 }
 
-export function saveProgress(state) {
-  localStorage.setItem(STORAGE_KEYS.light, String(state.light));
-  localStorage.setItem(STORAGE_KEYS.dust, String(state.dust));
-  localStorage.setItem(STORAGE_KEYS.owned, JSON.stringify(state.owned || {}));
-  localStorage.setItem(STORAGE_KEYS.language, state.language || DEFAULTS.language);
-  if (state.imageCache) {
-    localStorage.setItem(STORAGE_KEYS.imageCache, JSON.stringify(state.imageCache));
-  }
+export function saveProgress(progress, storage = localStorage) {
+  const migrated = migrateProgress(progress);
+  storage.setItem(STORAGE_KEYS.progress, JSON.stringify(migrated));
+  return migrated;
 }
 
-export function migrateSave(state) {
-  // 현재 저장 키를 그대로 유지한다. 새 필드는 여기에서 비파괴적으로 추가한다.
-  return {
-    light: Number.isFinite(state.light) ? state.light : DEFAULTS.light,
-    dust: Number.isFinite(state.dust) ? state.dust : DEFAULTS.dust,
-    owned: state.owned && typeof state.owned === 'object' ? state.owned : {},
-    language: state.language === 'en' ? 'en' : 'ko',
-    imageCache: state.imageCache && typeof state.imageCache === 'object' ? state.imageCache : {},
-  };
+export function saveLanguage(language, storage = localStorage) {
+  const normalized = language === 'en' ? 'en' : 'ko';
+  storage.setItem(STORAGE_KEYS.language, normalized);
+  return normalized;
+}
+
+export function savePartyNickname(nickname, storage = localStorage) {
+  storage.setItem(STORAGE_KEYS.partyNickname, String(nickname || ''));
+}
+
+export function ensurePartyPlayerId(storage = localStorage, createId = () => crypto.randomUUID()) {
+  let playerId = storage.getItem(STORAGE_KEYS.partyPlayer);
+  if (!playerId) {
+    playerId = createId();
+    storage.setItem(STORAGE_KEYS.partyPlayer, playerId);
+  }
+  return playerId;
 }
