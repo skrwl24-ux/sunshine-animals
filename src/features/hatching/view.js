@@ -1,6 +1,9 @@
 import { HATCH_OPTIONS, hatchMany, highestRarity } from './engine.js';
 import { setProgress } from '../../app/state.js';
 
+let lastResult = null;
+let lastOptionId = null;
+
 function text(language, ko, en) {
   return language === 'en' ? en : ko;
 }
@@ -11,6 +14,28 @@ function optionButton(id, title, detail, image) {
     <strong>${title}</strong>
     <small>${detail}</small>
   </button>`;
+}
+
+function resultMarkup(language) {
+  if (!lastResult || !lastOptionId) return '';
+  const option = HATCH_OPTIONS[lastOptionId];
+  const rarity = highestRarity(lastResult);
+  return `<div class="hatch-results rarity-${rarity}">
+    <h2>${option.count === 5 ? text(language, '알 5개 부화 완료!', 'Five Eggs Hatched!') : text(language, '알에서 동물 카드 발견!', 'Animal Card Discovered!')}</h2>
+    <div class="result-grid">${lastResult.map(({ animal, duplicate }) => `
+      <article class="result-card">
+        <img src="${animal.image}" alt="${animal.name}" loading="lazy" />
+        <span>${animal.emoji}</span>
+        <strong>${animal.name}</strong>
+        <small>${animal.rarity} · ${duplicate ? text(language, '중복 카드 +1', 'Duplicate Card +1') : text(language, '새 동물!', 'New Animal!')}</small>
+      </article>`).join('')}</div>
+    <button class="again-button" type="button" data-again>${text(language, option.count === 5 ? '5개 다시 뽑기' : '다시 뽑기', option.count === 5 ? 'Hatch 5 Again' : 'Hatch Again')}</button>
+  </div>`;
+}
+
+export function clearHatchResult() {
+  lastResult = null;
+  lastOptionId = null;
 }
 
 export function renderHatching(root, state, handlers) {
@@ -33,12 +58,20 @@ export function renderHatching(root, state, handlers) {
         ${optionButton('forest5', text(language, '숲의 알 5회', '5 Forest Eggs'), text(language, '🌿 25개 · 결과 5장', '🌿 25 · 5 results'), '/forest-opal-egg.png')}
         ${optionButton('radiant5', text(language, '빛나는 알 5회', '5 Radiant Eggs'), text(language, '🌿 50개 · 희귀 확률 UP', '🌿 50 · Higher rare chance'), '/aurora-egg.png')}
       </section>
-      <div id="hatch-feedback" class="hatch-feedback"></div>
+      <div id="hatch-feedback" class="hatch-feedback">${resultMarkup(language)}</div>
     </div>`;
 
-  root.querySelector('[data-action="home"]')?.addEventListener('click', handlers.onHome);
+  root.querySelector('[data-action="home"]')?.addEventListener('click', () => {
+    clearHatchResult();
+    handlers.onHome();
+  });
   root.querySelectorAll('[data-hatch]').forEach((button) => {
     button.addEventListener('click', () => performHatch(root, state, button.dataset.hatch, handlers));
+  });
+  root.querySelector('[data-again]')?.addEventListener('click', () => {
+    const optionId = lastOptionId;
+    clearHatchResult();
+    performHatch(root, state, optionId, handlers);
   });
 }
 
@@ -49,6 +82,7 @@ function performHatch(root, state, optionId, handlers) {
   const feedback = root.querySelector('#hatch-feedback');
 
   if (progress.light < option.cost) {
+    clearHatchResult();
     const missing = option.cost - progress.light;
     feedback.innerHTML = `
       <div class="insufficient-light">
@@ -75,23 +109,11 @@ function performHatch(root, state, optionId, handlers) {
   }
 
   const { owned, results } = hatchMany({ egg: option.egg, count: option.count, owned: progress.owned });
+  lastResult = results;
+  lastOptionId = optionId;
   setProgress({
     light: progress.light - option.cost,
     owned,
     explorations: Number(progress.explorations || 0) + option.count,
   });
-
-  const rarity = highestRarity(results);
-  feedback.innerHTML = `<div class="hatch-results rarity-${rarity}">
-    <h2>${option.count === 5 ? text(language, '알 5개 부화 완료!', 'Five Eggs Hatched!') : text(language, '알에서 동물 카드 발견!', 'Animal Card Discovered!')}</h2>
-    <div class="result-grid">${results.map(({ animal, duplicate }) => `
-      <article class="result-card">
-        <img src="${animal.image}" alt="${animal.name}" loading="lazy" />
-        <span>${animal.emoji}</span>
-        <strong>${animal.name}</strong>
-        <small>${animal.rarity} · ${duplicate ? text(language, '중복 카드 +1', 'Duplicate Card +1') : text(language, '새 동물!', 'New Animal!')}</small>
-      </article>`).join('')}</div>
-    <button class="again-button" type="button" data-again>${text(language, option.count === 5 ? '5개 다시 뽑기' : '다시 뽑기', option.count === 5 ? 'Hatch 5 Again' : 'Hatch Again')}</button>
-  </div>`;
-  feedback.querySelector('[data-again]')?.addEventListener('click', () => handlers.onRefresh());
 }
