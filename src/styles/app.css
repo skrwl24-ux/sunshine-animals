@@ -1,0 +1,200 @@
+:root {
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #213229;
+  background: #eef6ef;
+  font-synthesis: none;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top, rgba(255,255,255,.9), rgba(255,255,255,0) 35%),
+    linear-gradient(180deg, #dff1df, #f7f2db 60%, #e8f2e9);
+}
+
+button { font: inherit; }
+
+.app-shell {
+  width: min(1120px, calc(100% - 24px));
+  margin: 0 auto;
+  padding: 18px 0 48px;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 14px 18px;
+  border: 1px solid rgba(52, 94, 65, .18);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, .78);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 14px 40px rgba(42, 72, 50, .10);
+}
+
+.topbar h1,
+.hero-card h2,
+.status-card h3 { margin: 0; }
+
+.eyebrow {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .14em;
+  color: #51845f;
+}
+
+.top-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.resource-pill,
+.language-button {
+  border-radius: 999px;
+  border: 1px solid rgba(73, 113, 78, .22);
+  background: #fff;
+  min-height: 44px;
+}
+
+.resource-pill {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 14px;
+  font-size: 14px;
+}
+
+.resource-pill strong {
+  font-size: 18px;
+  color: #2d7544;
+}
+
+.language-button {
+  padding: 0 16px;
+  cursor: pointer;
+  font-weight: 800;
+  color: #294933;
+}
+
+.hero-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px;
+  align-items: center;
+  margin-top: 18px;
+  padding: clamp(22px, 4vw, 42px);
+  border-radius: 28px;
+  color: #f9fff9;
+  background: linear-gradient(135deg, #173d31, #2d6947 60%, #749448);
+  box-shadow: 0 20px 48px rgba(35, 70, 44, .22);
+}
+
+.hero-card h2 {
+  max-width: 720px;
+  font-size: clamp(27px, 5vw, 48px);
+  line-height: 1.08;
+}
+
+.hero-card .eyebrow { color: #d9ef9e; }
+
+.muted {
+  margin: 14px 0 0;
+  color: rgba(255,255,255,.76);
+  line-height: 1.6;
+}
+
+.discovery-stat {
+  min-width: 150px;
+  padding: 18px;
+  border-radius: 22px;
+  text-align: center;
+  background: rgba(255,255,255,.12);
+  border: 1px solid rgba(255,255,255,.18);
+}
+
+.discovery-stat span,
+.discovery-stat strong { display: block; }
+.discovery-stat strong { margin-top: 5px; font-size: 28px; }
+
+.menu-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.menu-card {
+  display: grid;
+  gap: 7px;
+  min-height: 148px;
+  padding: 20px;
+  text-align: left;
+  border: 1px solid rgba(64, 101, 71, .16);
+  border-radius: 22px;
+  background: rgba(255,255,255,.88);
+  color: #263c2d;
+  cursor: pointer;
+  box-shadow: 0 10px 28px rgba(46, 77, 52, .08);
+  transition: transform .16s ease, box-shadow .16s ease;
+}
+
+.menu-card:hover,
+.menu-card:focus-visible {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 30px rgba(46, 77, 52, .13);
+}
+
+.menu-icon { font-size: 32px; }
+.menu-card strong { font-size: 18px; }
+.menu-card small { color: #68786c; line-height: 1.45; }
+
+.status-card {
+  margin-top: 16px;
+  padding: 20px;
+  border-radius: 22px;
+  background: rgba(255,255,255,.78);
+  border: 1px solid rgba(64, 101, 71, .14);
+}
+
+.status-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.status-item {
+  padding: 14px;
+  border-radius: 16px;
+  background: #f3f7ef;
+}
+
+.status-item span,
+.status-item strong { display: block; }
+.status-item span { font-size: 12px; color: #69786d; }
+.status-item strong { margin-top: 4px; font-size: 22px; }
+
+@media (max-width: 760px) {
+  .app-shell { width: min(100% - 14px, 1120px); padding-top: 8px; }
+  .topbar { align-items: flex-start; flex-direction: column; border-radius: 18px; }
+  .top-actions { width: 100%; justify-content: space-between; }
+  .hero-card { grid-template-columns: 1fr; border-radius: 22px; }
+  .discovery-stat { min-width: 0; text-align: left; }
+  .menu-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .status-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 430px) {
+  .resource-pill span:nth-child(2) { display: none; }
+  .menu-grid { grid-template-columns: 1fr; }
+  .menu-card { min-height: 118px; }
+}
