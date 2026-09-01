@@ -4,12 +4,27 @@ import { renderHome } from './home.js';
 import { renderHatching, clearHatchResult } from '../features/hatching/view.js';
 import { renderBook, resetBookFilter } from '../features/book/view.js';
 import { renderQuiz, clearQuizState } from '../features/quiz/view.js';
+import { renderParty, stopPartyTimer } from '../features/party/view.js';
+import { renderRescue, stopRescueTimer } from '../features/rescue/view.js';
+import { renderQuests } from '../features/quests/view.js';
 
 const root = document.getElementById('app');
 let currentFeature = 'home';
 
+function cleanupFeature() {
+  stopPartyTimer();
+  stopRescueTimer();
+}
+
 function openFeature(feature) {
+  cleanupFeature();
   currentFeature = feature;
+  render();
+}
+
+function goHome() {
+  cleanupFeature();
+  currentFeature = 'home';
   render();
 }
 
@@ -17,62 +32,37 @@ function render() {
   const state = getState();
 
   if (currentFeature === 'hatch') {
-    renderHatching(root, state, {
-      onHome() { currentFeature = 'home'; render(); },
-      onFeature(feature) { openFeature(feature); },
-    });
+    renderHatching(root, state, { onHome: goHome, onFeature: openFeature });
     return;
   }
-
   if (currentFeature === 'book') {
-    renderBook(root, state, {
-      onHome() { currentFeature = 'home'; render(); },
-      onRefresh() { render(); },
-    });
+    renderBook(root, state, { onHome: goHome, onRefresh: render });
     return;
   }
-
   if (currentFeature === 'quiz') {
-    renderQuiz(root, state, {
-      onHome() { currentFeature = 'home'; render(); },
-      onRefresh() { render(); },
-    });
+    renderQuiz(root, state, { onHome: goHome, onRefresh: render });
+    return;
+  }
+  if (currentFeature === 'party') {
+    renderParty(root, state, { onHome: goHome, onReplay: () => openFeature('party') });
+    return;
+  }
+  if (currentFeature === 'rescue') {
+    renderRescue(root, state, { onHome: goHome, onReplay: () => openFeature('rescue') });
+    return;
+  }
+  if (currentFeature === 'quests') {
+    renderQuests(root, state, { onHome: goHome, onRefresh: render });
     return;
   }
 
   renderHome(root, state, {
     onToggleLanguage() { toggleLanguage(); },
     onFeature(feature) {
-      if (feature === 'hatch') {
-        clearHatchResult();
-        openFeature('hatch');
-        return;
-      }
-      if (feature === 'book') {
-        resetBookFilter();
-        openFeature('book');
-        return;
-      }
-      if (feature === 'quiz') {
-        clearQuizState();
-        openFeature('quiz');
-        return;
-      }
-
-      const language = getState().language;
-      const messages = {
-        ko: {
-          party: '애니멀 파티 기능은 다음 단계에서 연결합니다.',
-          rescue: '애니멀 구조대 기능은 다음 단계에서 연결합니다.',
-          quests: '특별 퀘스트 기능은 다음 단계에서 연결합니다.',
-        },
-        en: {
-          party: 'Animal Party will be connected in the next step.',
-          rescue: 'Animal Rescue will be connected in the next step.',
-          quests: 'Special Quests will be connected in the next step.',
-        },
-      };
-      window.alert(messages[language === 'en' ? 'en' : 'ko'][feature]);
+      if (feature === 'hatch') clearHatchResult();
+      if (feature === 'book') resetBookFilter();
+      if (feature === 'quiz') clearQuizState();
+      openFeature(feature);
     },
   });
 }
