@@ -3,7 +3,13 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 
 const source = fs.readFileSync(new URL('../game-data.js', import.meta.url), 'utf8');
-const sandbox = { window: {} };
+const sandbox = {
+  window: {},
+  document: {
+    addEventListener() {},
+    querySelectorAll() { return []; },
+  },
+};
 vm.runInNewContext(source, sandbox);
 globalThis.GAME_DATA = sandbox.window.GAME_DATA;
 
