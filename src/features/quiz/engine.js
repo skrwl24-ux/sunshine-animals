@@ -1,4 +1,5 @@
 import { quizzes } from '../../recovered/quizzes.js';
+import { legacyQuizExpansion } from '../../recovered/legacy-main-adapter.js';
 
 const TYPE_ORDER = ['choice', 'ox', 'spot'];
 
@@ -9,11 +10,12 @@ function randomItem(items, random = Math.random) {
 export function getQuizPool(language = 'ko') {
   const lang = language === 'en' ? 'en' : 'ko';
   const source = quizzes[lang];
-  return TYPE_ORDER.flatMap((type) => (source[type] || []).map((question, index) => ({
+  const recovered = TYPE_ORDER.flatMap((type) => (source[type] || []).map((question, index) => ({
     ...question,
     type,
     key: `${lang}:${type}:${index}`,
   })));
+  return [...recovered, ...legacyQuizExpansion(lang, recovered)];
 }
 
 export function pickQuestion(language = 'ko', previousKey = null, random = Math.random) {
