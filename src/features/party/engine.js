@@ -16,25 +16,14 @@ export function shuffle(items, random = Math.random) {
 export function createPartyDeck(random = Math.random) {
   const selected = shuffle(animals.filter((animal) => animal.image), random).slice(0, PARTY_PAIR_COUNT);
   return shuffle(selected.flatMap((animal) => [
-    { key: `${animal.id}-a`, animalId: animal.id, image: animal.image, emoji: animal.emoji, name: animal.name },
-    { key: `${animal.id}-b`, animalId: animal.id, image: animal.image, emoji: animal.emoji, name: animal.name },
+    { key: `${animal.id}-a`, animalId: animal.id, image: animal.image, emoji: animal.emoji, name: animal.name, nameEn: animal.nameEn },
+    { key: `${animal.id}-b`, animalId: animal.id, image: animal.image, emoji: animal.emoji, name: animal.name, nameEn: animal.nameEn },
   ]), random);
 }
 
-export function scoreMatch(combo) {
-  return combo >= 5 ? 200 : 100;
-}
-
-export function lightRewardForScore(score) {
-  return Math.floor(Math.max(0, Number(score) || 0) / PARTY_LIGHT_REWARD_SCORE);
-}
-
+export function scoreMatch(combo) { return combo >= 5 ? 200 : 100; }
+export function lightRewardForScore(score) { return Math.floor(Math.max(0, Number(score) || 0) / PARTY_LIGHT_REWARD_SCORE); }
 export function finishParty(progress, score) {
   const earnedLight = lightRewardForScore(score);
-  return {
-    ...progress,
-    light: Number(progress.light || 0) + earnedLight,
-    partyGames: Number(progress.partyGames || 0) + 1,
-    partyBest: Math.max(Number(progress.partyBest || 0), Number(score) || 0),
-  };
+  return { ...progress, light: Number(progress.light || 0) + earnedLight, partyGames: Number(progress.partyGames || 0) + 1, partyBest: Math.max(Number(progress.partyBest || 0), Number(score) || 0) };
 }
