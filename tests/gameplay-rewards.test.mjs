@@ -1,0 +1,20 @@
+import assert from 'node:assert/strict';
+import { finishParty, lightRewardForScore, scoreMatch } from '../src/features/party/engine.js';
+import { applyRescueReward, lightRewardForRescue, reactionAverage, rescueScore } from '../src/features/rescue/engine.js';
+import { claimQuest, questComplete } from '../src/features/quests/engine.js';
+
+assert.equal(scoreMatch(1),100);
+assert.equal(scoreMatch(5),200);
+assert.equal(lightRewardForScore(199),0);
+assert.equal(lightRewardForScore(400),2);
+const party=finishParty({light:5,partyGames:1,partyBest:250},400);
+assert.equal(party.light,7);assert.equal(party.partyGames,2);assert.equal(party.partyBest,400);
+assert.equal(rescueScore(4),100);assert.equal(rescueScore(5),200);
+assert.equal(lightRewardForRescue(999),1);
+assert.equal(applyRescueReward({light:2},1000).light,4);
+assert.equal(reactionAverage([1,2,3]),2);
+const progress={light:5,owned:{capybara:1},claimed:{},quizWins:10,explorations:20,partyGames:3,partyBest:1000};
+assert.equal(questComplete({metric:'quizWins',target:10},progress),true);
+const result=claimQuest('quiz10',progress);assert.equal(result.claimed,true);assert.equal(result.progress.light,10);assert.equal(result.progress.claimed.quiz10,true);
+const again=claimQuest('quiz10',result.progress);assert.equal(again.claimed,false);
+console.log('gameplay reward tests passed');
