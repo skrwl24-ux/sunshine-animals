@@ -1,0 +1,89 @@
+import { createPartyDeck, finishParty, PARTY_DURATION_SECONDS, scoreMatch } from './engine.js';
+import { setProgress } from '../../app/state.js';
+
+let timerId = null;
+
+function text(language, ko, en) { return language === 'en' ? en : ko; }
+
+export function stopPartyTimer() {
+  if (timerId) clearInterval(timerId);
+  timerId = null;
+}
+
+export function renderParty(root, state, handlers) {
+  stopPartyTimer();
+  const language = state.language === 'en' ? 'en' : 'ko';
+  const deck = createPartyDeck();
+  let seconds = PARTY_DURATION_SECONDS;
+  let score = 0;
+  let combo = 0;
+  let matched = new Set();
+  let open = [];
+  let locked = true;
+  let finished = false;
+
+  root.innerHTML = `<div class="feature-shell">
+    <header class="feature-header"><button class="back-button" data-home>← ${text(language,'홈','Home')}</button><div class="resource-pill">🌿 <span>${text(language,'자연의 빛','Light of Nature')}</span><strong>${state.progress.light}</strong></div></header>
+    <section class="feature-title"><span>🎉</span><div><h1>${text(language,'애니멀 파티','Animal Party')}</h1><p>${text(language,'3초 동안 위치를 기억하고 같은 동물 두 장을 찾아보세요.','Memorise the cards for 3 seconds, then match the pairs.')}</p></div></section>
+    <section class="game-scorebar"><strong>⏱ <span id="party-time">${seconds}</span></strong><strong>${text(language,'점수','Score')} <span id="party-score">0</span></strong><strong>${text(language,'콤보','Combo')} <span id="party-combo">0</span></strong></section>
+    <div class="party-banner" id="party-banner">${text(language,'위치를 기억하세요!','Memorise the positions!')}</div>
+    <section class="party-grid">${deck.map((card, index) => `<button class="party-card revealed" data-index="${index}" type="button"><img src="${card.image}" alt="${card.name}"><span>${card.emoji}</span></button>`).join('')}</section>
+    <div id="party-result"></div>
+  </div>`;
+
+  root.querySelector('[data-home]')?.addEventListener('click', () => { stopPartyTimer(); handlers.onHome(); });
+  const cards = [...root.querySelectorAll('.party-card')];
+
+  setTimeout(() => {
+    if (!root.isConnected || finished) return;
+    cards.forEach((button) => button.classList.remove('revealed'));
+    locked = false;
+    const banner = root.querySelector('#party-banner');
+    if (banner) banner.textContent = text(language,'같은 동물 두 장을 찾아보세요!','Find two matching animals!');
+    timerId = setInterval(() => {
+      seconds -= 1;
+      const timeNode = root.querySelector('#party-time');
+      if (timeNode) timeNode.textContent = Math.max(0, seconds);
+      if (seconds <= 0) endGame();
+    }, 1000);
+  }, 3000);
+
+  cards.forEach((button) => button.addEventListener('click', () => {
+    const index = Number(button.dataset.index);
+    if (locked || finished || matched.has(index) || open.includes(index)) return;
+    button.classList.add('revealed');
+    open.push(index);
+    if (open.length < 2) return;
+    locked = true;
+    const [a, b] = open;
+    if (deck[a].animalId === deck[b].animalId) {
+      matched.add(a); matched.add(b); combo += 1; score += scoreMatch(combo); open = []; locked = false;
+      updateScore();
+      if (matched.size === deck.length) endGame();
+      return;
+    }
+    combo = 0; updateScore();
+    setTimeout(() => {
+      cards[a]?.classList.remove('revealed'); cards[b]?.classList.remove('revealed'); open = []; locked = false;
+    }, 650);
+  }));
+
+  function updateScore() {
+    const scoreNode = root.querySelector('#party-score');
+    const comboNode = root.querySelector('#party-combo');
+    if (scoreNode) scoreNode.textContent = score;
+    if (comboNode) comboNode.textContent = combo;
+    root.querySelector('.party-grid')?.classList.toggle('fever', combo >= 5);
+  }
+
+  function endGame() {
+    if (finished) return;
+    finished = true; locked = true; stopPartyTimer();
+    const next = finishParty(state.progress, score);
+    const gained = next.light - Number(state.progress.light || 0);
+    setProgress(next);
+    const result = root.querySelector('#party-result');
+    if (result) result.innerHTML = `<section class="game-result"><h2>${text(language,'애니멀 파티 완료!','Animal Party Complete!')}</h2><p>${text(language,'최종 점수','Final score')}: <strong>${score}</strong></p><p>🌿 ${text(language,'자연의 빛','Light of Nature')} +${gained}</p><button class="again-button" type="button" data-again>${text(language,'한 번 더 놀기','Play Again')}</button></section>`;
+    result?.querySelector('[data-again]')?.addEventListener('click', handlers.onReplay);
+  }
+}
