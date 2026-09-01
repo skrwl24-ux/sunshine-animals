@@ -1,0 +1,8 @@
+{
+  "name": "sunshine-animals-readable",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node tests/storage-compatibility.test.mjs && node tests/recovered-data.test.mjs && node tests/hatching-engine.test.mjs && node tests/book-engine.test.mjs && node tests/quiz-engine.test.mjs && node tests/gameplay-rewards.test.mjs && node tests/main-data-integration.test.mjs"
+  }
+}
