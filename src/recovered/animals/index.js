@@ -3,9 +3,10 @@ import { animals as rare } from './rare.js';
 import { animals as epic } from './epic.js';
 import { animals as legendary } from './legendary.js';
 import { animals as mythic } from './mythic.js';
-import { legacyAnimalExpansion } from '../legacy-main-adapter.js';
+import { enrichRecoveredAnimals, legacyAnimalExpansion } from '../legacy-main-adapter.js';
 
-export const recoveredAnimals = [...common, ...rare, ...epic, ...legendary, ...mythic];
+const rawRecoveredAnimals = [...common, ...rare, ...epic, ...legendary, ...mythic];
+export const recoveredAnimals = enrichRecoveredAnimals(rawRecoveredAnimals);
 export const expansionAnimals = legacyAnimalExpansion(recoveredAnimals);
 export const animals = [...recoveredAnimals, ...expansionAnimals];
 
